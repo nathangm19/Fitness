@@ -1,0 +1,15 @@
+{
+ "v": 1,
+ "start": "2026-10-18",
+ "end": "2026-10-24",
+ "updated": "2026-10-23",
+ "source": "secondbrain 2_Areas/Health/Meal-Prep/2026-10-17-Weekly-Plan.md",
+ "meals": [
+  {"id": "2026-10-18-ny-strip", "day": "2026-10-18", "slot": "d", "name": "Grilled NY strip", "serving": "8 oz cooked steak", "kcal": 540, "p": 58, "c": 0, "f": 34, "fiber": 0, "components": "NY strip, salt, pepper, grilled", "basis": "USDA strip loin, lean and fat, grilled"},
+  {"id": "2026-10-18-grilled-salmon", "day": "2026-10-18", "slot": "d", "name": "Grilled salmon", "serving": "6 oz cooked fillet", "kcal": 350, "p": 38, "c": 0, "f": 21, "fiber": 0, "components": "Atlantic salmon, olive oil, grilled", "basis": "USDA farmed Atlantic salmon, cooked"},
+  {"id": "2026-10-19-chipotle-beef-bowls", "day": "2026-10-19", "slot": "d", "name": "Chipotle Brothy Beef Bowls", "serving": "1 bowl (about 2 cups, with 1/2 cup rice)", "kcal": 520, "p": 42, "c": 45, "f": 17, "fiber": 3, "components": "chuck roast, chipotle broth blended with cottage cheese, black beans, white rice, cilantro, lime, red onion", "basis": "recipes.md estimate at 8 servings; carbs and fat estimated"},
+  {"id": "2026-10-20-salmon-chickpea-salad", "day": "2026-10-20", "slot": "d", "name": "Salmon + Mediterranean Chickpea Salad", "serving": "1 plate (5 oz salmon, about 1 1/2 cups salad)", "kcal": 540, "p": 39, "c": 34, "f": 27, "fiber": 8, "components": "flaked cold salmon, chickpeas, cucumber, tomato, red onion, feta, olive oil and lemon", "basis": "recipes.md estimate at 4 servings; carbs and fat estimated"},
+  {"id": "2026-10-21-shawarma-thighs", "day": "2026-10-21", "slot": "d", "name": "Shawarma-Spiced Chicken Thighs", "serving": "1 portion (about 6 oz cooked thigh)", "kcal": 380, "p": 38, "c": 3, "f": 23, "fiber": 1, "components": "bone-in chicken thighs, yogurt-garlic shawarma marinade, smoked", "basis": "recipes.md estimate, chicken only; sides counted separately"},
+  {"id": "2026-10-23-air-fryer-chicken-parm", "day": "2026-10-23", "slot": "d", "name": "Air Fryer Chicken Parmesan", "serving": "1 breaded breast half with sauce and mozzarella, no pasta", "kcal": 390, "p": 43, "c": 19, "f": 15, "fiber": 2, "components": "chicken breast, breadcrumbs, parmesan, marinara, mozzarella", "basis": "recipes.md at 4 servings, no pasta; pasta is about 200 kcal a cup, log it separately"}
+ ]
+}

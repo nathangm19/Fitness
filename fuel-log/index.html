@@ -43,7 +43,7 @@ button:focus-visible, input:focus-visible, select:focus-visible { outline: 2px s
 .go:disabled { opacity: .45; }
 .ghost { background: none; border: 1px solid var(--line); border-radius: 9px; padding: 9px 13px; font-weight: 500; font-size: 14px; }
 .link { background: none; border: 0; color: var(--accent); font-weight: 600; font-size: 14px; padding: 6px 0; }
-input[type=text], input[type=search], input[type=number], input[type=date], select { width: 100%; font: inherit; font-size: 16px; padding: 10px 11px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 9px; min-width: 0; }
+input[type=text], input[type=search], input[type=number], input[type=password], input[type=date], select { width: 100%; font: inherit; font-size: 16px; padding: 10px 11px; background: var(--bg); color: var(--fg); border: 1px solid var(--line); border-radius: 9px; min-width: 0; }
 input[type=number] { font-family: var(--mono); }
 label.lab { display: block; font-size: 10.5px; font-weight: 600; letter-spacing: .08em; text-transform: uppercase; color: var(--faint); margin-bottom: 4px; }
 .row { display: flex; gap: 8px; align-items: flex-end; flex-wrap: wrap; }
@@ -96,7 +96,7 @@ label.lab { display: block; font-size: 10.5px; font-weight: 600; letter-spacing:
 .result .r-main { flex: 1; min-width: 0; }
 .result .r-name { font-weight: 500; overflow-wrap: anywhere; }
 .result .r-sub { font-size: 12px; color: var(--dim); }
-.result .r-k { font-family: var(--mono); font-size: 13px; flex: none; text-align: right; }
+.result .r-k { font-family: var(--mono); font-size: 13px; flex: 0 1 auto; max-width: 42%; text-align: right; overflow-wrap: anywhere; }
 .scan-box { position: relative; width: 100%; aspect-ratio: 4 / 3; background: #000; border-radius: 12px; overflow: hidden; }
 .scan-box video { width: 100%; height: 100%; object-fit: cover; }
 .scan-box .aim { position: absolute; left: 12%; right: 12%; top: 38%; height: 24%; border: 2px solid rgba(255,255,255,.85); border-radius: 10px; }
@@ -114,6 +114,19 @@ svg { display: block; max-width: 100%; height: auto; }
 .week i b { position: absolute; left: 0; right: 0; bottom: 0; background: var(--accent); }
 .week i b.over { background: var(--bad); }
 .week i b.none { background: transparent; }
+/* photo estimate */
+.ph-img { width: 100%; max-height: 260px; object-fit: cover; border-radius: 10px; margin-top: 10px; display: block; }
+.est { border-top: 1px solid var(--line); padding: 10px 0; }
+.est:first-child { border-top: 0; }
+.est-top { display: flex; gap: 9px; align-items: center; font-weight: 500; }
+.est-top input { width: 18px; height: 18px; flex: none; }
+.est-top .e-name { flex: 1; min-width: 0; overflow-wrap: anywhere; }
+.est .e-sub { font-size: 12px; color: var(--dim); margin: 2px 0 6px 27px; }
+.est .row { margin-left: 27px; }
+.est .row > div { flex: 0 0 84px; }
+.est-total { font-weight: 600; margin-top: 6px; }
+.group { margin: 12px 0 2px; }
+.group:first-child { margin-top: 0; }
 details.card > summary { cursor: pointer; font-weight: 600; list-style: none; }
 details.card > summary::-webkit-details-marker { display: none; }
 @media (prefers-reduced-motion: reduce) { * { transition: none !important; } }
@@ -193,6 +206,13 @@ details.card > summary::-webkit-details-marker { display: none; }
       <label class="ghost" for="imp" style="cursor:pointer">Restore backup<input type="file" id="imp" accept="application/json,.json" hidden></label>
     </div>
     <div class="toast" id="s-toast"></div>
+    <p class="eyebrow" style="margin-top:14px">Photo estimates</p>
+    <div class="row">
+      <div class="grow"><label class="lab" for="s-gkey">Gemini API key</label><input type="password" id="s-gkey" autocomplete="off" placeholder="Paste a key from Google AI Studio"></div>
+      <button class="go" id="s-gsave">Save key</button>
+      <button class="ghost" id="s-gdel" hidden>Remove key</button>
+    </div>
+    <div class="sub" id="s-gstat" style="margin-top:6px"></div>
     <p class="sub" style="margin:8px 0 0">Everything lives on this phone. Food data comes from Open Food Facts, a free, open database. Check labels for exact numbers.</p>
   </details>
 </div>
@@ -202,12 +222,36 @@ details.card > summary::-webkit-details-marker { display: none; }
   <div class="wrap">
     <div class="sheet-head"><h2 id="sheet-title">Add to Breakfast</h2><button class="x" id="sheet-x" aria-label="Close">×</button></div>
     <div class="tabs" role="tablist" id="tabs">
+      <button role="tab" data-t="plan" aria-selected="false">Planned</button>
       <button role="tab" data-t="search" aria-selected="true">Search</button>
       <button role="tab" data-t="scan" aria-selected="false">Scan</button>
-      <button role="tab" data-t="recent" aria-selected="false">Recent</button>
-      <button role="tab" data-t="mine" aria-selected="false">My foods</button>
-      <button role="tab" data-t="quick" aria-selected="false">Quick add</button>
+      <button role="tab" data-t="photo" aria-selected="false">Photo</button>
+      <button role="tab" data-t="saved" aria-selected="false">Saved</button>
+      <button role="tab" data-t="quick" aria-selected="false">Quick</button>
     </div>
+
+    <section id="t-plan" class="card" hidden>
+      <div class="sub" id="plan-head"></div>
+      <div id="plan-list" style="margin-top:6px"></div>
+    </section>
+
+    <section id="t-photo" class="card" hidden>
+      <div id="ph-nokey" class="sub" hidden>Photo estimates need a Gemini API key. Add one under <b>Goals, data and backup</b> on the main screen.</div>
+      <div class="row">
+        <label class="go" for="ph-cam" style="cursor:pointer">Take a photo<input type="file" id="ph-cam" accept="image/*" capture="environment" hidden></label>
+        <label class="ghost" for="ph-lib" style="cursor:pointer">From gallery<input type="file" id="ph-lib" accept="image/*" hidden></label>
+      </div>
+      <img id="ph-img" class="ph-img" alt="Meal photo" hidden>
+      <div class="row" style="margin-top:10px">
+        <div class="grow"><label class="lab" for="ph-note">Anything the photo won't show</label><input type="text" id="ph-note" placeholder="Ate about half · extra ranch" autocomplete="off"></div>
+        <button class="go" id="ph-go" disabled>Estimate</button>
+      </div>
+      <div class="toast" id="ph-toast"></div>
+      <div id="ph-results"></div>
+      <div class="est-total" id="ph-total" hidden></div>
+      <div class="row" style="margin-top:10px"><button class="go" id="ph-add" hidden>Add to Breakfast</button></div>
+      <p class="sub" style="margin:10px 0 0">Gemini estimates from the picture and this week's meal plan. Expect it to be off by a quarter either way; fix the numbers before adding. The photo isn't saved.</p>
+    </section>
 
     <section id="t-search" class="card">
       <form class="row" id="q-form">
@@ -231,9 +275,10 @@ details.card > summary::-webkit-details-marker { display: none; }
       <div class="toast" id="scan-toast"></div>
     </section>
 
-    <section id="t-recent" class="card" hidden><div id="recent-list"></div></section>
-
-    <section id="t-mine" class="card" hidden>
+    <section id="t-saved" class="card" hidden>
+      <p class="eyebrow">Recent</p>
+      <div id="recent-list"></div>
+      <p class="eyebrow" style="margin-top:14px">My foods</p>
       <div id="mine-list"></div>
       <p class="eyebrow" style="margin-top:12px">New food</p>
       <div class="row"><div class="grow"><label class="lab" for="cf-name">Name</label><input type="text" id="cf-name" placeholder="Meal-prep beef bowl" autocomplete="off"></div></div>
@@ -296,7 +341,7 @@ details.card > summary::-webkit-details-marker { display: none; }
   var FIELDS = "code,product_name,brands,nutriments,serving_size,serving_quantity,serving_quantity_unit";
 
   var S = load();
-  var day = today(), sheet = { meal: "b", food: null, editing: null };
+  var day = today(), sheet = { meal: "b", food: null, editing: null, tab: "search" };
 
   /* ---------- storage ---------- */
   function blank() { return { v: 1, days: {}, foods: {}, recent: [], settings: { kcal: 2000, protein: 140, carbs: 0, fat: 0, exBack: false } }; }
@@ -370,6 +415,7 @@ details.card > summary::-webkit-details-marker { display: none; }
   function per(food) {
     if (food.per100 && food.serving && food.serving.grams) { var x = nutrition(food, 1, "serving"); return n0(x.k) + " kcal · " + food.serving.label; }
     if (food.per100) return n0(food.per100.kcal) + " kcal · 100 g";
+    if (food.source === "plan") return n0(food.perServing.kcal) + " kcal";
     if (food.perServing) return n0(food.perServing.kcal) + " kcal · " + ((food.serving && food.serving.label) || "serving");
     return "";
   }
@@ -486,25 +532,30 @@ details.card > summary::-webkit-details-marker { display: none; }
   function mealName(k) { return MEALS.filter(function (m) { return m[0] === k; })[0][1]; }
   function openSheet(meal) {
     sheet.meal = meal; sheet.editing = null; el("sheet-title").textContent = "Add to " + mealName(meal);
-    el("sheet").hidden = false; document.body.style.overflow = "hidden"; showTab("search"); el("pick").hidden = true;
-    setTimeout(function () { el("q").focus(); }, 50);
+    el("sheet").hidden = false; document.body.style.overflow = "hidden"; el("pick").hidden = true;
+    resetPhoto();
+    var t = menuActive() ? "plan" : "search"; showTab(t);
+    if (t === "search") setTimeout(function () { el("q").focus(); }, 50);
   }
   function closeSheet() { stopScan(); el("sheet").hidden = true; document.body.style.overflow = ""; el("pick").hidden = true; render(); }
   el("sheet-x").addEventListener("click", closeSheet);
   document.addEventListener("keydown", function (e) { if (e.key === "Escape" && !el("sheet").hidden) closeSheet(); });
+  var TABS = ["plan", "search", "scan", "photo", "saved", "quick"];
   function showTab(t) {
+    sheet.tab = t;
     document.querySelectorAll("#tabs button").forEach(function (b) { b.setAttribute("aria-selected", b.getAttribute("data-t") === t ? "true" : "false"); });
-    ["search", "scan", "recent", "mine", "quick"].forEach(function (x) { el("t-" + x).hidden = x !== t; });
+    TABS.forEach(function (x) { el("t-" + x).hidden = x !== t; });
     el("tabs").hidden = false; el("pick").hidden = true;
     if (t !== "scan") stopScan();
-    if (t === "recent") renderRecent();
-    if (t === "mine") renderMine();
+    if (t === "saved") { renderRecent(); renderMine(); }
+    if (t === "plan") renderPlan();
+    if (t === "photo") { el("ph-nokey").hidden = !!gkey(); el("ph-add").textContent = "Add to " + mealName(sheet.meal); }
   }
   document.querySelectorAll("#tabs button").forEach(function (b) { b.addEventListener("click", function () { showTab(b.getAttribute("data-t")); }); });
 
   function resultRow(food, onPick) {
     var b = mk("button", "result"); b.type = "button";
-    var main = mk("div", "r-main"); main.appendChild(mk("div", "r-name", food.name)); main.appendChild(mk("div", "r-sub", [food.brand, food.source === "custom" ? "my food" : ""].filter(Boolean).join(" · ")));
+    var main = mk("div", "r-main"); main.appendChild(mk("div", "r-name", food.name)); main.appendChild(mk("div", "r-sub", food.source === "plan" ? planSub(food) : [food.brand, food.source === "custom" ? "my food" : ""].filter(Boolean).join(" · ")));
     b.appendChild(main); b.appendChild(mk("div", "r-k", per(food)));
     b.addEventListener("click", function () { onPick(food); });
     return b;
@@ -549,10 +600,10 @@ details.card > summary::-webkit-details-marker { display: none; }
   /* ---------- serving picker ---------- */
   function pick(food, entry) {
     sheet.food = food; sheet.editing = entry || null;
-    ["search", "scan", "recent", "mine", "quick"].forEach(function (x) { el("t-" + x).hidden = true; });
+    TABS.forEach(function (x) { el("t-" + x).hidden = true; });
     el("tabs").hidden = true; stopScan();
     el("pick").hidden = false;
-    el("pick-src").textContent = food.source === "off" ? "Open Food Facts" + (food.barcode ? " · " + food.barcode : "") : food.source === "custom" ? "My food" : "Quick add";
+    el("pick-src").textContent = food.source === "off" ? "Open Food Facts" + (food.barcode ? " · " + food.barcode : "") : food.source === "custom" ? "My food" : food.source === "plan" ? "This week's meal plan" : "Quick add";
     el("pick-name").textContent = food.name; el("pick-brand").textContent = food.brand || "";
     var sel = el("pick-unit"); sel.textContent = "";
     unitsFor(food).forEach(function (u) { var o = mk("option", null, u.id === "serving" ? u.label + (u.grams ? " (" + n1(u.grams) + " g)" : "") : u.label); o.value = u.id; sel.appendChild(o); });
@@ -573,7 +624,7 @@ details.card > summary::-webkit-details-marker { display: none; }
   el("pick-unit").addEventListener("change", function () {
     var u = el("pick-unit").value; el("pick-qty").value = u === "g" ? 100 : u === "oz" ? 4 : 1; updatePick();
   });
-  el("pick-back").addEventListener("click", function () { if (sheet.editing) closeSheet(); else showTab("search"); });
+  el("pick-back").addEventListener("click", function () { if (sheet.editing) closeSheet(); else showTab(sheet.tab || "search"); });
   el("pick-add").addEventListener("click", function () {
     var food = sheet.food, q = parseFloat(el("pick-qty").value) || 0, u = el("pick-unit").value, x = nutrition(food, q, u);
     if (!(q > 0)) return;
@@ -599,6 +650,196 @@ details.card > summary::-webkit-details-marker { display: none; }
     pick(food, e);
   }
 
+  /* ---------- this week's meal plan ---------- */
+  // plan.json sits next to this page. The meal-prep planner writes it once Nate approves a week:
+  // each meal carries Nate's portion and its nutrition, so logging a planned dinner is one tap
+  // and the photo estimate starts from what was actually cooked.
+  var MKEY = "fuel-log-plan", MENU = (function () { try { return JSON.parse(localStorage.getItem(MKEY) || "null"); } catch (e) { return null; } })();
+  var SLOT = { b: "breakfast", l: "lunch", d: "dinner", s: "snack" };
+  async function fetchMenu() {
+    try {
+      var r = await fetch("plan.json", { cache: "no-cache" }); if (!r.ok) return;
+      var j = await r.json(); if (!j || j.v !== 1 || !Array.isArray(j.meals) || !j.start || !j.end) return;
+      MENU = j; try { localStorage.setItem(MKEY, JSON.stringify(j)); } catch (e) {}
+      if (!el("sheet").hidden && sheet.tab === "plan" && el("pick").hidden) renderPlan();
+    } catch (e) {}
+  }
+  // leftovers run a few days past the plan week
+  function menuActive() { return !!(MENU && day >= MENU.start && day <= addDays(MENU.end, 3) && MENU.meals.length); }
+  function planFood(m) {
+    return { id: "plan-" + m.id, source: "plan", planId: m.id, name: m.name, brand: "", day: m.day || "", slot: m.slot || "", fiber: m.fiber || 0,
+             serving: { label: m.serving || "serving" }, perServing: { kcal: +m.kcal || 0, p: +m.p || 0, c: +m.c || 0, f: +m.f || 0 } };
+  }
+  function planSub(f) {
+    return [f.day ? DOW[parseISO(f.day).getDay()] + (f.slot ? " " + SLOT[f.slot] : "") : (f.slot ? "any " + SLOT[f.slot] : "this week"),
+            n0(f.perServing.p) + " g protein", f.fiber ? n0(f.fiber) + " g fiber" : ""].filter(Boolean).join(" · ");
+  }
+  function renderPlan() {
+    var host = el("plan-list"); host.textContent = "";
+    if (!menuActive()) {
+      el("plan-head").textContent = "";
+      host.appendChild(mk("div", "empty", "No meal plan for this week yet. Once Claude plans the week's cooking, the meals show up here for one-tap logging."));
+      return;
+    }
+    el("plan-head").textContent = "Week of " + pretty(MENU.start).slice(4) + " – " + pretty(MENU.end).slice(4) + " · your meal plan";
+    var foods = MENU.meals.map(planFood), groups = [["Today", []], ["Earlier this week (leftovers)", []], ["Later this week", []], ["Any day", []]];
+    foods.forEach(function (f) { groups[!f.day ? 3 : f.day === day ? 0 : f.day < day ? 1 : 2][1].push(f); });
+    groups[0][1].sort(function (a, b) { return (b.slot === sheet.meal) - (a.slot === sheet.meal); });
+    groups[1][1].sort(function (a, b) { return a.day < b.day ? 1 : -1; });
+    groups[2][1].sort(function (a, b) { return a.day < b.day ? -1 : 1; });
+    groups.forEach(function (g) {
+      if (!g[1].length) return;
+      host.appendChild(mk("p", "eyebrow group", g[0]));
+      g[1].forEach(function (f) { host.appendChild(resultRow(f, pick)); });
+    });
+  }
+
+  /* ---------- photo estimate (Gemini) ---------- */
+  // The key lives in its own storage slot so it never rides along in a JSON backup.
+  var GKEY = "fuel-log-gemini";
+  var MODELS = ["gemini-3.5-flash", "gemini-2.5-flash", "gemini-flash-lite-latest", "gemini-3.1-flash-lite"];
+  function gkey() { try { return localStorage.getItem(GKEY) || ""; } catch (e) { return ""; } }
+  var photo = { b64: null, items: [], busy: false };
+  function resetPhoto() {
+    photo.b64 = null; photo.items = []; el("ph-img").hidden = true; el("ph-img").removeAttribute("src"); el("ph-note").value = "";
+    el("ph-go").disabled = true; el("ph-results").textContent = ""; el("ph-total").hidden = true; el("ph-add").hidden = true; toast("ph-toast", "");
+  }
+  function shrink(file) {
+    return new Promise(function (ok, bad) {
+      var url = URL.createObjectURL(file), img = new Image();
+      img.onload = function () {
+        var k = Math.min(1, 1024 / Math.max(img.naturalWidth, img.naturalHeight)), c = document.createElement("canvas");
+        c.width = Math.round(img.naturalWidth * k); c.height = Math.round(img.naturalHeight * k);
+        c.getContext("2d").drawImage(img, 0, 0, c.width, c.height); URL.revokeObjectURL(url);
+        ok(c.toDataURL("image/jpeg", 0.8));
+      };
+      img.onerror = function () { URL.revokeObjectURL(url); bad(new Error("img")); };
+      img.src = url;
+    });
+  }
+  async function takePhoto(input) {
+    var file = input.files[0]; input.value = ""; if (!file) return;
+    resetPhoto();
+    try { var url = await shrink(file); photo.b64 = url.split(",")[1]; el("ph-img").src = url; el("ph-img").hidden = false; el("ph-go").disabled = !gkey(); }
+    catch (e) { toast("ph-toast", "Couldn't read that photo.", true); return; }
+    if (!gkey()) toast("ph-toast", "Add a Gemini key under Goals, data and backup first.", true);
+    else toast("ph-toast", "Add a note if part of it went uneaten, then Estimate.");
+  }
+  el("ph-cam").addEventListener("change", function () { takePhoto(el("ph-cam")); });
+  el("ph-lib").addEventListener("change", function () { takePhoto(el("ph-lib")); });
+
+  function estimatePrompt() {
+    var lines = (menuActive() ? MENU.meals : []).map(function (m) {
+      return "- id " + m.id + ": " + m.name + (m.components ? " (" + m.components + ")" : "") + ". One serving = " + (m.serving || "1 serving") +
+             ": " + n0(m.kcal) + " kcal, " + n0(m.p) + " g protein, " + n0(m.c) + " g carbs, " + n0(m.f) + " g fat." + (m.day ? " Planned " + pretty(m.day) + "." : "");
+    });
+    var note = el("ph-note").value.trim();
+    return "Estimate what one adult ate from this photo, for a calorie log. The meal being logged is " + mealName(sheet.meal).toLowerCase() + " on " + pretty(day) + ".\n" +
+      (lines.length ? "Meals cooked at home this week, with the eater's own portion:\n" + lines.join("\n") +
+        "\nIf an item in the photo is one of these, set plan_id to its id and servings to how many of that serving size are on the plate, and base its numbers on that meal's nutrition. A home-cooked plate that looks like one of these almost certainly is.\n"
+        : "") +
+      "For anything else, plan_id is empty, servings is 0, and estimate from typical US nutrition data. Count visible oil, butter, cheese, sauces and dressings; they are where estimates go low. " +
+      "List each distinct food separately. Portions in US units (cups, oz, pieces). " +
+      (note ? "The eater says: \"" + note.replace(/"/g, "'") + "\". Apply it.\n" : "") +
+      "If the photo is not food someone is about to eat or just ate, return no items and say so in note. note: one short sentence naming the biggest uncertainty.";
+  }
+  var SCHEMA = { type: "OBJECT", properties: {
+    items: { type: "ARRAY", items: { type: "OBJECT", properties: {
+      name: { type: "STRING" }, plan_id: { type: "STRING" }, portion: { type: "STRING" }, servings: { type: "NUMBER" },
+      kcal: { type: "NUMBER" }, protein_g: { type: "NUMBER" }, carbs_g: { type: "NUMBER" }, fat_g: { type: "NUMBER" },
+      confidence: { type: "STRING", enum: ["high", "medium", "low"] } },
+      required: ["name", "plan_id", "portion", "servings", "kcal", "protein_g", "carbs_g", "fat_g", "confidence"] } },
+    note: { type: "STRING" } }, required: ["items", "note"] };
+  async function askGemini(body) {
+    var key = gkey(), last = "";
+    for (var i = 0; i < MODELS.length; i++) {
+      var ctrl = new AbortController(), timer = setTimeout(function () { ctrl.abort(); }, 90000), r;
+      try {
+        r = await fetch("https://generativelanguage.googleapis.com/v1beta/models/" + MODELS[i] + ":generateContent",
+          { method: "POST", headers: { "content-type": "application/json", "x-goog-api-key": key }, body: body, signal: ctrl.signal });
+      } catch (e) { clearTimeout(timer); if (e.name === "AbortError") { last = "slow"; continue; } throw new Error("offline"); }
+      clearTimeout(timer);
+      if (r.ok) {
+        var j = await r.json(), parts = (((j.candidates || [])[0] || {}).content || {}).parts || [];
+        var text = parts.map(function (p) { return p.thought ? "" : (p.text || ""); }).join("");
+        try { return JSON.parse(text); } catch (e) { last = "garbled"; continue; }
+      }
+      var t = await r.text().catch(function () { return ""; });
+      if (r.status === 401 || r.status === 403 || (r.status === 400 && /API key|API_KEY/i.test(t))) throw new Error("key");
+      if (r.status === 429 || r.status === 404 || r.status >= 500) { last = r.status === 429 ? "quota" : "busy"; continue; }
+      throw new Error("http " + r.status);
+    }
+    throw new Error(last || "busy");
+  }
+  el("ph-go").addEventListener("click", async function () {
+    if (!photo.b64 || photo.busy) return;
+    photo.busy = true; el("ph-go").disabled = true; el("ph-results").textContent = ""; el("ph-total").hidden = true; el("ph-add").hidden = true;
+    toast("ph-toast", "Looking at your plate… (10–30 s)");
+    var body = JSON.stringify({ contents: [{ parts: [{ inline_data: { mime_type: "image/jpeg", data: photo.b64 } }, { text: estimatePrompt() }] }],
+                                generationConfig: { responseMimeType: "application/json", responseSchema: SCHEMA, temperature: 0.2 } });
+    try {
+      var res = await askGemini(body), byId = {};
+      (menuActive() ? MENU.meals : []).forEach(function (m) { byId[m.id] = m; });
+      photo.items = (res.items || []).map(function (x) {
+        var m = byId[x.plan_id], it = { on: true, name: String(x.name || "Food"), portion: String(x.portion || ""), conf: x.confidence || "medium", plan: m || null,
+                  servings: m ? (+x.servings > 0 ? Math.round(+x.servings * 4) / 4 : 1) : 0, kcal: Math.max(0, Math.round(+x.kcal || 0)), p: Math.max(0, +x.protein_g || 0), c: Math.max(0, +x.carbs_g || 0), f: Math.max(0, +x.fat_g || 0) };
+        if (m) setServings(it, it.servings);
+        return it;
+      });
+      renderEstimate();
+      toast("ph-toast", photo.items.length ? (res.note || "") : (res.note || "No food found in that photo."), !photo.items.length);
+    } catch (e) {
+      var msg = { key: "Google turned down the key. Check it under Goals, data and backup.", offline: "No connection. Try again with signal, or use Quick add.",
+                  quota: "The free Gemini allowance is used up for today. It resets tomorrow; use Quick add for now.", busy: "Gemini is busy right now. Try again in a minute.",
+                  slow: "Gemini took too long. Try again.", garbled: "Gemini's answer came back unreadable. Try again." }[e.message] || "Estimate failed (" + e.message + ").";
+      toast("ph-toast", msg, true);
+    }
+    photo.busy = false; el("ph-go").disabled = false;
+  });
+  function setServings(it, s) {
+    it.servings = s; var m = it.plan;
+    it.kcal = Math.round(m.kcal * s); it.p = Math.round(m.p * s * 10) / 10; it.c = Math.round((m.c || 0) * s * 10) / 10; it.f = Math.round((m.f || 0) * s * 10) / 10;
+  }
+  function numBox(label, val, step, on) {
+    var d = mk("div"), l = mk("label", "lab", label), i = mk("input"); i.type = "number"; i.inputMode = "decimal"; i.step = step; i.value = val; i.min = 0;
+    i.setAttribute("aria-label", label); i.addEventListener("input", function () { on(parseFloat(i.value) || 0, i); }); d.appendChild(l); d.appendChild(i); return d;
+  }
+  function renderEstimate() {
+    var host = el("ph-results"); host.textContent = "";
+    photo.items.forEach(function (it) {
+      var box = mk("div", "est"), top = mk("label", "est-top"), cb = mk("input"); cb.type = "checkbox"; cb.checked = it.on;
+      cb.addEventListener("change", function () { it.on = cb.checked; estTotal(); });
+      top.appendChild(cb); top.appendChild(mk("span", "e-name", it.name)); top.appendChild(mk("span", "pill" + (it.conf === "high" ? " good" : it.conf === "low" ? " bad" : ""), it.conf));
+      box.appendChild(top);
+      box.appendChild(mk("div", "e-sub", [it.portion, it.plan ? "from your plan: " + it.plan.name : ""].filter(Boolean).join(" · ")));
+      var row = mk("div", "row"), kBox, pBox;
+      if (it.plan) row.appendChild(numBox("Servings", it.servings, "0.25", function (v) { setServings(it, v); kBox.querySelector("input").value = it.kcal; pBox.querySelector("input").value = n1(it.p); estTotal(); }));
+      kBox = numBox("Kcal", it.kcal, "10", function (v) { var k0 = it.kcal || 1; it.c = it.c * v / k0; it.f = it.f * v / k0; it.kcal = Math.round(v); estTotal(); });
+      pBox = numBox("Protein g", n1(it.p), "1", function (v) { it.p = v; estTotal(); });
+      row.appendChild(kBox); row.appendChild(pBox); box.appendChild(row); host.appendChild(box);
+    });
+    estTotal();
+  }
+  function estTotal() {
+    var on = photo.items.filter(function (x) { return x.on; }), k = 0, p = 0;
+    on.forEach(function (x) { k += x.kcal; p += x.p; });
+    el("ph-total").hidden = !photo.items.length; el("ph-total").textContent = "Total " + n0(k) + " kcal · " + n0(p) + " g protein";
+    el("ph-add").hidden = !photo.items.length; el("ph-add").disabled = !on.length;
+  }
+  el("ph-add").addEventListener("click", function () {
+    var list = dayRec(day).meals[sheet.meal];
+    photo.items.filter(function (x) { return x.on; }).forEach(function (x) {
+      var e = { id: uid(), foodId: null, name: x.name, brand: "photo estimate", qty: 1, unit: "serving", amount: x.portion,
+                kcal: Math.round(x.kcal), p: Math.round(x.p * 10) / 10, c: Math.round(x.c * 10) / 10, f: Math.round(x.f * 10) / 10 };
+      if (x.plan && x.servings > 0) {
+        var pf = planFood(x.plan); S.foods[pf.id] = Object.assign(S.foods[pf.id] || {}, pf);
+        e.foodId = pf.id; e.name = pf.name; e.qty = x.servings; e.amount = unitText(pf, x.servings, "serving") + " (photo)";
+      }
+      list.push(e);
+    });
+    save(); resetPhoto(); closeSheet();
+  });
+
   /* ---------- barcode ---------- */
   var scan = { stream: null, timer: null, det: null };
   function detector() { if (!("BarcodeDetector" in window)) return null; try { return scan.det || (scan.det = new BarcodeDetector({ formats: ["ean_13", "ean_8", "upc_a", "upc_e", "code_128"] })); } catch (e) { return null; } }
@@ -613,7 +854,7 @@ details.card > summary::-webkit-details-marker { display: none; }
       var j = await r.json();
       var food = j && j.status === 1 && j.product ? fromOFF(Object.assign({ code: code }, j.product)) : null;
       if (food) { pick(food); return; }
-      showTab("mine"); el("cf-barcode").value = code; el("cf-name").focus();
+      showTab("saved"); el("cf-barcode").value = code; el("cf-name").focus();
       toast("cf-toast", (j && j.status === 1 ? "Barcode " + code + " is listed without calories." : "Barcode " + code + " isn't in Open Food Facts yet.") + " Save it here and it scans next time.", true);
     } catch (e) { toast("scan-toast", "Couldn't reach Open Food Facts. Check your signal.", true); }
   }
@@ -694,15 +935,27 @@ details.card > summary::-webkit-details-marker { display: none; }
     catch (e) { toast("s-toast", "That isn't a Fuel Log backup.", true); }
   });
 
+  function keyStatus() {
+    var k = gkey(); el("s-gdel").hidden = !k; el("s-gkey").value = "";
+    el("s-gstat").textContent = k ? "Key saved on this phone only (ends …" + k.slice(-4) + "). It is not in backups." : "No key yet. Make one at aistudio.google.com/apikey.";
+  }
+  el("s-gsave").addEventListener("click", function () {
+    var k = el("s-gkey").value.trim();
+    if (!/^[\w.-]{20,}$/.test(k)) { toast("s-toast", "That doesn't look like a Gemini key.", true); return; }
+    try { localStorage.setItem(GKEY, k); } catch (e) { toast("s-toast", "Couldn't save the key on this phone.", true); return; }
+    keyStatus(); toast("s-toast", "Key saved.");
+  });
+  el("s-gdel").addEventListener("click", function () { try { localStorage.removeItem(GKEY); } catch (e) {} keyStatus(); toast("s-toast", "Key removed."); });
+
   /* ---------- day nav ---------- */
   el("prev").addEventListener("click", function () { day = addDays(day, -1); render(); });
   el("next").addEventListener("click", function () { if (day < today()) { day = addDays(day, 1); render(); } });
   // left open overnight: if it was showing today, roll forward to the new today
   var shown = today();
-  document.addEventListener("visibilitychange", function () { if (document.hidden) { shown = today(); return; } if (day === shown && today() !== shown) day = today(); render(); });
+  document.addEventListener("visibilitychange", function () { if (document.hidden) { shown = today(); return; } if (day === shown && today() !== shown) day = today(); render(); fetchMenu(); });
 
   window.__fuel = { state: function () { return S; }, day: function () { return day; } };
-  fillSettings(); render();
+  fillSettings(); keyStatus(); render(); fetchMenu();
   if ("serviceWorker" in navigator && location.protocol === "https:" && !/claude\.ai|claudeusercontent/.test(location.hostname)) navigator.serviceWorker.register("sw.js").catch(function () {});
 })();
 </script>
