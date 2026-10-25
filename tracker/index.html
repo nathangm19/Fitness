@@ -1,0 +1,297 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="theme-color" content="#F2F2F7" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#000000" media="(prefers-color-scheme: dark)">
+<title>Tracker</title>
+<link rel="manifest" href="manifest.webmanifest">
+<link rel="icon" href="icon-192.png">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link rel="stylesheet" href="app.css">
+</head>
+<body>
+
+<!-- Today -->
+<main id="v-today" class="view" aria-label="Today">
+  <div class="head">
+    <div class="head-text">
+      <p class="eyebrow" id="day-eyebrow"></p>
+      <h1 id="day-title">Today</h1>
+    </div>
+    <div class="day-nav">
+      <button class="round" id="prev" aria-label="Previous day"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M11 3L5 9l6 6"/></svg></button>
+      <button class="round" id="next" aria-label="Next day"><svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M7 3l6 6-6 6"/></svg></button>
+      <button class="round" id="add-top" aria-label="Add food"><svg width="20" height="20" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M10 3v14M3 10h14"/></svg></button>
+    </div>
+  </div>
+
+  <section class="card" aria-label="Calories">
+    <div class="ring-wrap">
+      <div class="ring" id="ring">
+        <svg width="148" height="148" viewBox="0 0 148 148" role="img" id="ring-svg" aria-label="">
+          <circle cx="74" cy="74" r="64" fill="none" stroke="var(--track)" stroke-width="14"/>
+          <circle class="ring-arc" id="ring-arc" cx="74" cy="74" r="64" fill="none" stroke="var(--cal)" stroke-width="14" stroke-linecap="round" stroke-dasharray="0 402" transform="rotate(-90 74 74)"/>
+        </svg>
+        <div class="ring-centre"><span class="ring-num" id="ring-num">0</span><span class="ring-lab" id="ring-lab">left</span></div>
+      </div>
+      <div class="stats">
+        <div class="stat"><span class="stat-lab">Ceiling</span><span class="stat-val" id="st-goal">0</span></div>
+        <div class="stat"><span class="stat-lab">Eaten</span><span class="stat-val" id="st-food">0</span></div>
+        <div class="stat"><span class="stat-lab">Exercise</span><span class="stat-val" id="st-ex">0</span></div>
+      </div>
+    </div>
+    <div class="macros">
+      <div class="macro"><span class="macro-name">Protein</span><div class="bar"><i id="mb-p" style="background: var(--blue)"></i></div><span class="macro-val" id="mv-p"></span></div>
+      <div class="macro"><span class="macro-name">Carbs</span><div class="bar"><i id="mb-c" style="background: var(--carb)"></i></div><span class="macro-val" id="mv-c"></span></div>
+      <div class="macro"><span class="macro-name">Fat</span><div class="bar"><i id="mb-f" style="background: var(--fat)"></i></div><span class="macro-val" id="mv-f"></span></div>
+    </div>
+  </section>
+
+  <div id="meals"></div>
+
+  <section class="section" aria-label="Exercise">
+    <div class="section-head"><h2>Exercise</h2><span class="sub num" id="ex-sub"></span></div>
+    <div class="list" id="ex-list"></div>
+    <form class="fields" id="ex-form">
+      <div class="field"><label for="ex-name">What</label><input class="input" id="ex-name" placeholder="Treadmill walk" autocomplete="off"></div>
+      <div class="field" style="flex: 0 0 72px"><label for="ex-min">Min</label><input class="input" id="ex-min" type="number" inputmode="numeric"></div>
+      <div class="field" style="flex: 0 0 80px"><label for="ex-kcal">Kcal</label><input class="input" id="ex-kcal" type="number" inputmode="numeric"></div>
+      <button class="round" style="align-self: flex-end" aria-label="Add exercise"><svg width="18" height="18" viewBox="0 0 20 20" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M10 3v14M3 10h14"/></svg></button>
+    </form>
+    <p class="note" id="ex-note"></p>
+  </section>
+
+  <section class="section" aria-label="Morning weight">
+    <div class="section-head"><h2>Morning weight</h2><span class="sub num" id="w-sub"></span></div>
+    <form class="fields" id="w-form">
+      <div class="field"><label for="w-in" class="lab">Pounds, before coffee</label><input class="input" id="w-in" type="number" inputmode="decimal" step="0.1" placeholder="196.8"></div>
+      <button class="pill" style="align-self: flex-end; height: 44px">Save</button>
+    </form>
+  </section>
+</main>
+
+<!-- Plan -->
+<main id="v-plan" class="view" aria-label="Plan" hidden>
+  <div class="head-text"><p class="eyebrow" id="plan-eyebrow">This week's cooking</p><h1>Plan</h1></div>
+  <div id="plan-body"></div>
+</main>
+
+<!-- Progress -->
+<main id="v-progress" class="view" aria-label="Progress" hidden>
+  <h1>Progress</h1>
+  <div class="seg" role="tablist" id="range">
+    <button role="tab" data-r="30" aria-selected="true">Month</button>
+    <button role="tab" data-r="90" aria-selected="false">3 months</button>
+    <button role="tab" data-r="0" aria-selected="false">All</button>
+  </div>
+  <section class="card" aria-label="Weight">
+    <div style="display: flex; justify-content: space-between; align-items: flex-start">
+      <div class="stat"><span class="stat-lab">Trend weight</span><span class="big" id="w-trend">–</span></div>
+      <div class="stat" style="align-items: flex-end"><span class="stat-lab">Goal</span><span class="stat-val" id="w-goal" style="font-size: 17px"></span></div>
+    </div>
+    <svg class="chart" id="w-chart" viewBox="0 0 320 132" role="img" aria-label="Weight trend against the plan line"></svg>
+    <div class="axis" id="w-axis"></div>
+    <p class="note" style="padding: 0">Dots are mornings. The line is what counts. Dashed is the plan.</p>
+  </section>
+  <section class="card" aria-label="This week">
+    <div style="display: flex; justify-content: space-between; align-items: baseline">
+      <span style="font-size: 17px; font-weight: 600">This week</span>
+      <span class="note num" style="padding: 0" id="wk-sub"></span>
+    </div>
+    <div class="bars" id="wk-bars"></div>
+    <div class="days" id="wk-days"></div>
+  </section>
+  <section class="card" aria-label="Your real burn">
+    <span style="font-size: 17px; font-weight: 600">Your real burn</span>
+    <div class="bar"><i id="burn-bar" style="background: var(--blue)"></i></div>
+    <span style="font-size: 15px; color: var(--ink-3)" id="burn-text"></span>
+  </section>
+</main>
+
+<!-- Me -->
+<main id="v-me" class="view" aria-label="Me" hidden>
+  <h1>Me</h1>
+  <section class="section">
+    <div class="section-head"><h2>Goals</h2></div>
+    <form class="card" id="goals">
+      <div class="fields">
+        <div class="field"><label for="g-kcal">Calorie ceiling</label><input class="input" id="g-kcal" type="number" inputmode="numeric"></div>
+        <div class="field"><label for="g-p">Protein g</label><input class="input" id="g-p" type="number" inputmode="numeric"></div>
+      </div>
+      <div class="fields">
+        <div class="field"><label for="g-c">Carbs g</label><input class="input" id="g-c" type="number" inputmode="numeric"></div>
+        <div class="field"><label for="g-f">Fat g</label><input class="input" id="g-f" type="number" inputmode="numeric"></div>
+      </div>
+      <label class="switch">Add exercise back to the ceiling <input type="checkbox" id="g-ex"></label>
+      <div class="fields">
+        <div class="field"><label for="g-ws">Start lb</label><input class="input" id="g-ws" type="number" inputmode="decimal" step="0.1"></div>
+        <div class="field"><label for="g-wg">Goal lb</label><input class="input" id="g-wg" type="number" inputmode="decimal" step="0.1"></div>
+        <div class="field"><label for="g-rate">Lb a week</label><input class="input" id="g-rate" type="number" inputmode="decimal" step="0.1"></div>
+      </div>
+      <div class="field"><label for="g-start">Plan started</label><input class="input" id="g-start" type="date"></div>
+      <button class="btn">Save goals</button>
+    </form>
+  </section>
+  <section class="section">
+    <div class="section-head"><h2>Keys</h2></div>
+    <div class="card">
+      <div class="field"><label for="k-gem">Gemini key, for plate photos</label><input class="input" id="k-gem" autocomplete="off" placeholder="Paste a key from aistudio.google.com"></div>
+      <div class="field"><label for="k-usda">USDA key, for generic foods</label><input class="input" id="k-usda" autocomplete="off" placeholder="Optional; a shared demo key is used without one"></div>
+      <button class="btn plain" id="k-save">Save keys</button>
+      <p class="note" style="padding: 0" id="k-note"></p>
+    </div>
+  </section>
+  <section class="section">
+    <div class="section-head"><h2>Data</h2></div>
+    <div class="list">
+      <button class="row" id="d-csv"><span class="row-main"><span class="row-title">Export diary as CSV</span><span class="row-sub">One row per food</span></span></button>
+      <button class="row" id="d-json"><span class="row-main"><span class="row-title">Back up everything</span><span class="row-sub">A JSON file you can restore later</span></span></button>
+      <label class="row" for="d-imp" style="cursor: pointer"><span class="row-main"><span class="row-title" style="color: var(--blue)">Restore from a backup</span><span class="row-sub">Tracker or Fuel Log backups both work</span></span></label>
+    </div>
+    <input type="file" id="d-imp" accept="application/json,.json" hidden>
+    <p class="note">Everything stays on this phone. Food searches go to Open Food Facts and USDA; plate photos go to Google Gemini only when you ask for an estimate.</p>
+  </section>
+</main>
+
+<nav class="tabbar" role="tablist" aria-label="Sections">
+  <button role="tab" data-v="today" aria-selected="true"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" aria-hidden="true"><circle cx="12" cy="12" r="8.5"/><path d="M12 3.5a8.5 8.5 0 0 1 8.5 8.5" stroke-width="3.5" stroke-linecap="round"/></svg>Today</button>
+  <button role="tab" data-v="plan" aria-selected="false"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="4" y="5" width="16" height="15" rx="3"/><path d="M4 10h16M9 3v4M15 3v4"/></svg>Plan</button>
+  <button role="tab" data-v="progress" aria-selected="false"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M4 17l5-5 4 3 7-8"/><path d="M15 7h5v5"/></svg>Progress</button>
+  <button role="tab" data-v="me" aria-selected="false"><svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><circle cx="12" cy="9" r="4"/><path d="M4.5 20c1.4-3.6 4.2-5 7.5-5s6.1 1.4 7.5 5"/></svg>Me</button>
+</nav>
+
+<div class="scrim" id="scrim" hidden></div>
+
+<!-- Add food sheet -->
+<section class="sheet" id="sheet-add" role="dialog" aria-modal="true" aria-labelledby="add-title" hidden>
+  <div class="grabber"></div>
+  <div class="sheet-head">
+    <button class="link" id="add-cancel">Cancel</button>
+    <span class="sheet-title" id="add-title">Add to Breakfast</span>
+    <span></span>
+  </div>
+  <div class="sheet-body" id="add-body">
+    <form class="search" id="q-form" role="search">
+      <svg width="18" height="18" viewBox="0 0 18 18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" aria-hidden="true"><circle cx="8" cy="8" r="5.5"/><path d="M12.2 12.2L16 16"/></svg>
+      <input id="q" type="search" placeholder="Search foods" aria-label="Search foods" autocomplete="off" enterkeyhint="search">
+    </form>
+    <div class="tiles">
+      <button class="tile" data-panel="scan" aria-pressed="false"><svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" aria-hidden="true"><path d="M3 8V5a2 2 0 0 1 2-2h3M18 3h3a2 2 0 0 1 2 2v3M23 18v3a2 2 0 0 1-2 2h-3M8 23H5a2 2 0 0 1-2-2v-3M8 9v8M11 9v8M14 9v8M18 9v8"/></svg><span>Scan barcode</span></button>
+      <button class="tile" data-panel="photo" aria-pressed="false"><svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 9a2 2 0 0 1 2-2h3l2-3h6l2 3h3a2 2 0 0 1 2 2v11a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"/><circle cx="13" cy="14" r="4.5"/></svg><span>Photo of plate</span></button>
+      <button class="tile" data-panel="quick" aria-pressed="false"><svg width="26" height="26" viewBox="0 0 26 26" fill="none" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M14 3L6 15h6l-1 8 8-12h-6z"/></svg><span>Quick add</span></button>
+    </div>
+
+    <!-- scan -->
+    <div id="p-scan" class="section" hidden>
+      <video class="scan" id="scan-video" playsinline muted hidden></video>
+      <button class="btn plain" id="scan-start">Open camera</button>
+      <form class="fields" id="bc-form">
+        <div class="field"><label for="bc">Or type the barcode</label><input class="input" id="bc" inputmode="numeric" autocomplete="off" placeholder="0737628064502"></div>
+        <button class="pill" style="align-self: flex-end; height: 44px">Look up</button>
+      </form>
+    </div>
+
+    <!-- photo -->
+    <div id="p-photo" class="section" hidden>
+      <img class="plate" id="ph-img" alt="Your plate" hidden>
+      <div class="fields">
+        <label class="btn plain" style="display: flex; align-items: center; justify-content: center">Take photo<input type="file" accept="image/*" capture="environment" id="ph-cam" hidden></label>
+        <label class="btn plain" style="display: flex; align-items: center; justify-content: center">From library<input type="file" accept="image/*" id="ph-lib" hidden></label>
+      </div>
+      <input class="input" id="ph-note" placeholder="Anything it can't see? (left half the rice)" autocomplete="off">
+      <button class="btn" id="ph-go" disabled>Estimate</button>
+      <div id="ph-results" class="section"></div>
+      <button class="btn" id="ph-add" hidden>Add</button>
+    </div>
+
+    <!-- quick add -->
+    <form id="p-quick" class="card" hidden>
+      <div class="field"><label for="qa-name">What it was</label><input class="input" id="qa-name" placeholder="Shawarma plate" autocomplete="off"></div>
+      <div class="fields">
+        <div class="field"><label for="qa-k">Kcal</label><input class="input" id="qa-k" type="number" inputmode="numeric"></div>
+        <div class="field"><label for="qa-p">Protein</label><input class="input" id="qa-p" type="number" inputmode="decimal"></div>
+        <div class="field"><label for="qa-c">Carbs</label><input class="input" id="qa-c" type="number" inputmode="decimal"></div>
+        <div class="field"><label for="qa-f">Fat</label><input class="input" id="qa-f" type="number" inputmode="decimal"></div>
+      </div>
+      <button class="btn">Add</button>
+    </form>
+
+    <!-- lists -->
+    <div id="p-lists" class="section">
+      <div class="seg" role="tablist" id="add-seg">
+        <button role="tab" data-l="plan" aria-selected="true">Planned</button>
+        <button role="tab" data-l="recent" aria-selected="false">Recent</button>
+        <button role="tab" data-l="mine" aria-selected="false">My foods</button>
+      </div>
+      <div id="add-list" class="section"></div>
+    </div>
+
+    <!-- search results -->
+    <div id="p-search" class="section" hidden></div>
+
+    <!-- new custom food -->
+    <form id="p-custom" class="card" hidden>
+      <span style="font-size: 17px; font-weight: 600">New food</span>
+      <div class="field"><label for="cf-name">Name</label><input class="input" id="cf-name" placeholder="Meal-prep beef bowl" autocomplete="off"></div>
+      <div class="fields">
+        <div class="field"><label for="cf-serv">Serving</label><input class="input" id="cf-serv" placeholder="1 bowl" autocomplete="off"></div>
+        <div class="field"><label for="cf-k">Kcal</label><input class="input" id="cf-k" type="number" inputmode="numeric"></div>
+      </div>
+      <div class="fields">
+        <div class="field"><label for="cf-p">Protein</label><input class="input" id="cf-p" type="number" inputmode="decimal"></div>
+        <div class="field"><label for="cf-c">Carbs</label><input class="input" id="cf-c" type="number" inputmode="decimal"></div>
+        <div class="field"><label for="cf-f">Fat</label><input class="input" id="cf-f" type="number" inputmode="decimal"></div>
+      </div>
+      <div class="field"><label for="cf-bc">Barcode</label><input class="input" id="cf-bc" inputmode="numeric" autocomplete="off" placeholder="Optional"></div>
+      <button class="btn">Save food</button>
+    </form>
+  </div>
+</section>
+
+<!-- Food detail sheet -->
+<section class="sheet short" id="sheet-food" role="dialog" aria-modal="true" aria-labelledby="fd-name" hidden>
+  <div class="grabber"></div>
+  <div class="sheet-head">
+    <button class="link" id="fd-back">Back</button>
+    <span class="sheet-title" id="fd-meal"></span>
+    <span></span>
+  </div>
+  <div class="sheet-body">
+    <div>
+      <p class="eyebrow" id="fd-src"></p>
+      <h2 class="food-name" id="fd-name"></h2>
+      <span class="row-sub" id="fd-brand"></span>
+    </div>
+    <div class="fields">
+      <div class="field">
+        <span class="lab">Amount</span>
+        <div class="stepper">
+          <button type="button" id="fd-minus" aria-label="Less">−</button>
+          <input class="input num" id="fd-qty" type="number" inputmode="decimal" step="0.25" aria-label="Amount">
+          <button type="button" id="fd-plus" aria-label="More">+</button>
+        </div>
+      </div>
+    </div>
+    <div class="field"><label for="fd-unit">Unit</label><select class="input" id="fd-unit"></select></div>
+    <div class="card facts">
+      <div><b id="fd-k">0</b><small>kcal</small></div>
+      <div><b id="fd-p">0</b><small>protein</small></div>
+      <div><b id="fd-c">0</b><small>carbs</small></div>
+      <div><b id="fd-f">0</b><small>fat</small></div>
+    </div>
+    <p class="note" id="fd-after"></p>
+    <button class="btn" id="fd-add">Add</button>
+    <button class="btn danger" id="fd-del" hidden>Remove from diary</button>
+  </div>
+</section>
+
+<div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<script src="core.js"></script>
+<script src="app.js"></script>
+</body>
+</html>
