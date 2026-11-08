@@ -8,6 +8,7 @@
     }
   },
   "enabledPlugins": {
-    "egm@nate-skills": true
+    "egm@nate-skills": true,
+    "mental-models@nate-skills": true
   }
 }
